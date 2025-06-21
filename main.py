@@ -36,17 +36,20 @@ with st.form(key="chart_form", clear_on_submit=True):
   user_msg = st.text_input("You:", "")
   send = st.form_submit_button("Send")
 
-def handle_conversation():
-  context = ""
-  print("Welcome to the AI ChatBot, type 'exit' to quite.")
-  while True:
-    user_input = input("You: ")
-    if user_input.lower() == "exit":
-      break
-    
-    result = chain.invoke({"context": "", "question": user_input})
-    print("Bot: ", result)
-    context += f"\nUser: {user_input}\nAI: {result}"
-    
-if __name__ == "__main__":
-  handle_conversation()
+# when user hits send
+if send and user_msg:
+  # context string
+  context = "\n".join(f"User: {u}\nAI: {a}" for u, a in st.session_state.history)
+  # get bot's reply
+  bot_reply = chain.invoke({"context": context, "question": user_msg})
+  # save user and bot messages
+  st.session_state.history.append((user_msg, bot_reply))
+  
+# display chat history
+for user_text, bot_text in st.session_state.history:
+  st.markdown(f"**You**: {user_text} ")
+  st.markdown(f"**Bot**: {bot_text} ")
+  
+# clear chat button
+if st.sidebar.button("Clear chat"):
+  st.session_state.history = []
